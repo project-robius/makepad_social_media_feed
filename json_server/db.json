@@ -1,0 +1,17 @@
+{
+    "posts": [
+        {
+            "id": 1,
+            "user": "matthew",
+            "content_url": "some/url",
+            "caption": "some caption"
+        }
+    ],
+    "comments": [
+        {
+            "id": 1,
+            "body": "some comment",
+            "postId": 1
+        }
+    ]
+}
