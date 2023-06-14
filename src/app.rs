@@ -2,61 +2,174 @@ use makepad_micro_serde::*;
 use makepad_platform::network::{HttpRequest, Method};
 use makepad_widgets::*;
 
-use crate::{post_list::PostList, post_widget::Post};
-
 live_design! {
     import makepad_widgets::button::Button;
     import makepad_widgets::desktop_window::DesktopWindow;
     import makepad_widgets::label::Label;
-    import makepad_widgets::frame::Image;
-    import makepad_widgets::text_input::TextInput;
     import makepad_widgets::frame::*
     import makepad_draw::shader::std::*;
-    import makepad_social_media_feed::post_list::PostList;
+    import makepad_widgets::swipe_list::*;
 
     LOGO_TEXT = {
         font_size: (16),
         font: {path: dep("crate://self/resources/IBMPlexSans-Text.ttf")}
     }
 
-    ICO_SAVE = dep("crate://self/resources/icons/Icon_Save.svg")
-    ICO_HEART = dep("crate://self/resources/icons/Icon_Heart.svg")
+    REGULAR_TEXT = {
+        font_size: (12),
+        font: {path: dep("crate://self/resources/IBMPlexSans-Text.ttf")}
+    }
 
-    COLOR_BLACK = #x00000000
+    BOLD_TEXT = {
+        font_size: (12),
+        font: {path: dep("crate://self/resources/IBMPlexSans-SemiBold.ttf")}
+    }
+
+    ICON_HEART = dep("crate://self/resources/icons/Icon_Heart.svg")
+    ICON_COMMENT = dep("crate://self/resources/icons/Icon_Comment.svg")
+    ICON_SHARE = dep("crate://self/resources/icons/Icon_Share.svg")
+    ICON_SAVE = dep("crate://self/resources/icons/Icon_Save.svg")
+    ICON_FAV = dep("crate://self/resources/icons/Icon_Favorite.svg")
+
+    IMG_PROFILE = dep("crate://self/resources/pfp2.jpg")
+    IMG_POST = dep("crate://self/resources/post2.jpg")
+
+    COLOR_BG = #xfff8ee
 
     IconButton = <Button> {
         draw_icon: {
-            svg_file: (ICO_SAVE),
+            svg_file: (ICON_HEART)
             fn get_color(self) -> vec4 {
-                return mix(
-                    mix(
-                        (COLOR_BLACK),
-                        (COLOR_BLACK),
-                        self.hover
-                    ),
-                    (COLOR_BLACK),
-                    self.pressed
-                )
+                return vec4(0.0, 0.0, 0.0, 1.0);
             }
-         }
-        icon_walk: { width: 7.5, height: Fit }
+        }
+        icon_walk: {margin: {left: 0.0}, width: 14, height: Fit}
+        label: ""
         draw_bg: {
             fn pixel(self) -> vec4 {
                 let sdf = Sdf2d::viewport(self.pos * self.rect_size);
+                sdf.box(
+                    1.,
+                    1.,
+                    self.rect_size.x - 2.0,
+                    self.rect_size.y - 2.0,
+                    2.0
+                )
+
+                sdf.fill((COLOR_BG));
+
                 return sdf.result
             }
         }
-        layout: { padding: 0.0 }
-        label: "icon"
+    }
+    
+    PostListEntry = <SwipeListEntry> {
+        layout: {flow: Down, padding: 0.0}
+        walk: {width: Fill, height: Fit, margin: {bottom: 60}}
+        
+        center: <Frame> {
+            layout: {
+                flow: Down,
+                spacing: 10,
+                padding: 0.0
+            },
+            walk: {width: Fill, height: Fit},
+    
+            header = <Frame> {
+                layout: {
+                    flow: Right,
+                    spacing: 10,
+                },
+                walk: {width: Fill, height: Fit},
+    
+                profile_img = <Image> {
+                    image: (IMG_PROFILE)
+                    draw_bg:{
+                        fn pixel(self) -> vec4 {
+                            let sdf = Sdf2d::viewport(self.pos * self.rect_size);
+                            let c = self.rect_size * 0.5;
+                            sdf.circle(c.x,c.y,c.x - 2.)
+                            sdf.fill_keep(self.get_color());
+                            sdf.stroke(#FFF8EE, 1);
+                            return sdf.result
+                        }
+                    }
+                    image_scale: 0.65
+                    walk: {margin: 0}
+                    layout: {padding: 0}
+                }
+    
+                username = <Label> {
+                    walk: {width: Fit, height: Fit},
+                    draw_label: {
+                        text_style: <BOLD_TEXT> {},
+                        color: #0
+                    },
+                    label: "username",
+                }
+            }
+
+            content = <Image> {
+                image: (IMG_POST),
+                image_scale: 0.2,
+                walk: {margin: 0}
+                layout: {padding: 0}
+            }
+    
+            actions = <Frame> {
+                layout: {
+                    flow: Right,
+                    spacing: 0.0,
+                    padding: 0.0,
+                },
+                walk: {width: Fill, height: Fit},
+    
+                like_button = <IconButton> { draw_icon: { svg_file: (ICON_HEART) } icon_walk: { width: 20.0, height: 20.0 } }
+                comment_button = <IconButton> { draw_icon: { svg_file: (ICON_COMMENT) } icon_walk: { width: 20.0, height: 20.0 } }
+                share_button = <IconButton> { draw_icon: { svg_file: (ICON_SHARE) } icon_walk: { width: 20.0, height: 20.0 } }
+                save_button = <IconButton> { draw_icon: { svg_file: (ICON_SAVE) } icon_walk: { width: 20.0, height: 20.0 } }
+            }
+    
+            caption = <Frame> {
+                layout: {
+                    flow: Right,
+                    spacing: 3,
+                },
+                walk: {width: Fill, height: Fit},
+    
+                username = <Label> {
+                    walk: {width: Fit, height: Fit},
+                    draw_label: {
+                        text_style: <BOLD_TEXT> {},
+                        color: #0
+                    },
+                    label: "username",
+                }
+    
+                caption_text = <Label> {
+                    walk: {width: Fill, height: Fit},
+                    draw_label: {
+                        text_style: <REGULAR_TEXT> {},
+                        color: #0
+                    },
+                    label: "caption text",
+                }
+            }
+        }
+    }
+
+    PostList = <SwipeList> {
+        walk: { height: Fill, margin: 2}
+        Entry = <PostListEntry>{ }
     }
 
     App = {{App}} {
         ui: <DesktopWindow>{
-
+            window: {inner_size: vec2(720, 1080)},
             show_bg: true
             layout: {
                 flow: Down,
-                spacing: 20,
+                spacing: 0.0,
                 align: {
                     x: 0.0,
                     y: 0.0
@@ -68,14 +181,14 @@ live_design! {
             },
             draw_bg: {
                 fn pixel(self) -> vec4 {
-                    return vec4(0.95, 0.95, 0.95, 1.0);
+                    return (COLOR_BG)
                 }
             }
 
             header = <Frame> {
                 layout: {
                     flow: Right,
-                    spacing: 20,
+                    spacing: 240,
                     align: {
                         x: 0.2,
                         y: 0.1
@@ -83,19 +196,25 @@ live_design! {
                 },
                 walk: {
                     width: Fill,
-                    height: 170
+                    height: Fit,
+                    margin: {
+                        top: 20,
+                        bottom: 40,
+                        left: 5,
+                        right: 5
+                    }
                 }
 
                 message_label = <Label> {
-                    walk: {width: 300, height: Fit},
+                    walk: {width: Fit, height: Fit},
                     draw_label: {
                         text_style: <LOGO_TEXT>{},
                         color: #0
                     },
-                    label: "Makepadgram",
+                    label: "Makegram",
                 }
 
-                notifications_button = <IconButton> { draw_icon: { svg_file: (ICO_HEART) } icon_walk: { width: 15.0, height: Fit } }
+                notifications_button = <IconButton> { draw_icon: { svg_file: (ICON_FAV) } icon_walk: { width: 20.0, height: 20.0 } }
             }
 
             post_list = <PostList> {}
@@ -117,17 +236,43 @@ pub struct App {
 impl LiveHook for App {
     fn before_live_design(cx: &mut Cx) {
         crate::makepad_widgets::live_design(cx);
-        crate::post_list::live_design(cx);
-        crate::post_widget::live_design(cx);
     }
 
-    fn after_new_from_doc(&mut self, cx: &mut Cx) {
-        Self::fetch_posts(cx);
+    fn after_new_from_doc(&mut self, _cx: &mut Cx) {
+        // Self::fetch_posts(cx);
+
+        let mut posts = Vec::new();
+            
+        posts.push(Post {
+            id: 908234823904,
+            user: "matthewwastaken".to_string(),
+            user_pfp_url: "some_pfp_url".to_string(),
+            content_url: "some_content_url".to_string(),
+            caption: "This is a a test caption, it looks pretty neat with word-wrapping. Looking forward to links and emojis".to_string(),
+        });
+
+        posts.push(Post {
+            id: 908234823902,
+            user: "i_am_susan".to_string(),
+            user_pfp_url: "some_pfp_url".to_string(),
+            content_url: "some_content_url".to_string(),
+            caption: "lorem ipusm dolor set amet sit amet, lorem ipusm dolor set amet sit amet".to_string(),
+        });
+
+        posts.push(Post {
+            id: 908234823902,
+            user: "makegram".to_string(),
+            user_pfp_url: "some_pfp_url".to_string(),
+            content_url: "some_content_url".to_string(),
+            caption: "lorem ipusm dolor set amet sit amet, lorem ipusm dolor set amet sit amet".to_string(),
+        });
+
+        self.posts = posts;
     }
 }
 
 impl App {
-    fn fetch_posts(cx: &mut Cx) {
+    fn _fetch_posts(cx: &mut Cx) {
         let server_url = "http://localhost:3000/posts".to_string();
         let request_identifier = LiveId::from_str("PostsFetch").unwrap();
         let mut request = HttpRequest::new(request_identifier, server_url, Method::GET);
@@ -138,8 +283,29 @@ impl App {
 
 impl AppMain for App {
     fn handle_event(&mut self, cx: &mut Cx, event: &Event) {
+
+        let post_list = self.ui.get_swipe_list_set(ids!(post_list));
+
         if let Event::Draw(event) = event {
-            return self.ui.draw_widget_all(&mut Cx2d::new(cx, event));
+            // self.ui.draw_widget_all(&mut Cx2d::new(cx, event));
+
+            let cx = &mut Cx2d::new(cx, event);
+            while let Some(next) = self.ui.draw_widget(cx).hook_widget() {
+                if let Some(mut list) = post_list.has_widget(&next).borrow_mut() {
+                    for post in self.posts.iter() {
+                        if let Some(item) = list.get_entry(cx, LiveId(post.id as u64).into(), live_id!(Entry)) {
+                            item.get_label(id!(username)).set_label(&post.user);
+                            item.get_label(id!(caption_text)).set_label(&post.caption);
+                            
+                            // TODO 
+                            // item.get_image(id!(profile_img)).set_url(&post.user_pfp_url); 
+                            // item.get_image(id!(content)).set_url(&post.content_url); 
+                            item.draw_widget_all(cx);
+                        }
+                    }
+                }
+            }
+            return
         }
 
         if let Event::HttpResponse(event) = event {
@@ -156,21 +322,21 @@ impl AppMain for App {
             });
         }
 
-        if let Some(mut post_list) = self.ui.get_widget(id!(post_list)).borrow_mut::<PostList>() {
-            post_list.set_posts(self.posts.clone());
-
-            // to run with local data instead (no network):
-            // let mut posts = Vec::new();
-            // posts.push(Post {
-            //     id: 908234823904,
-            //     user: "matthew".to_string(),
-            //     content_url: "some_image_url".to_string(),
-            //     caption: "lorem ipusm dolor set amet sit amet".to_string(),
-            // });
-            // post_list.set_posts(posts);
-        }
+        // if let Some(mut post_list) = self.ui.get_widget(id!(post_list)).borrow_mut::<PostList>() {
+        //     post_list.set_posts(self.posts.clone());
+        //     post_list.set_posts(posts);
+        // }
     }
 }
 
 #[derive(DeJson, SerJson)]
 struct PostListFetch(Vec<Post>);
+
+#[derive(Debug, Clone, PartialEq, Default, DeJson, SerJson)]
+pub struct Post {
+    pub id: u64,
+    pub user: String,
+    pub user_pfp_url: String,
+    pub content_url: String,
+    pub caption: String,
+}
