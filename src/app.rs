@@ -15,7 +15,7 @@ live_design! {
         font: {path: dep("crate://self/resources/IBMPlexSans-Text.ttf")}
     }
 
-    REGULAR_TEXT = {
+    PRIMARY_TEXT = {
         font_size: (12),
         font: {path: dep("crate://self/resources/IBMPlexSans-Text.ttf")}
     }
@@ -65,7 +65,7 @@ live_design! {
     
     PostListEntry = <SwipeListEntry> {
         layout: {flow: Down, padding: 0.0}
-        walk: {width: Fill, height: Fit, margin: {bottom: 60}}
+        walk: {width: Fill, height: Fit, margin: {bottom: 50}}
         
         center: <Frame> {
             layout: {
@@ -107,13 +107,24 @@ live_design! {
                     },
                     label: "username",
                 }
+
+                options = <IconButton> { draw_icon: { svg_file: (ICON_COMMENT) } icon_walk: { width: 20.0, height: 20.0 } }
             }
 
-            content = <Image> {
-                image: (IMG_POST),
-                image_scale: 0.2,
-                walk: {margin: 0}
-                layout: {padding: 0}
+            content = <Frame> {
+                layout: {
+                    flow: Down,
+                    spacing: 10,
+                    padding: 0.0
+                },
+                walk: {width: Fill, height: Fit},
+
+                <Image> {
+                    image: (IMG_POST),
+                    image_scale: 0.2,
+                    walk: {margin: 0}
+                    layout: {padding: 0}
+                }
             }
     
             actions = <Frame> {
@@ -149,10 +160,30 @@ live_design! {
                 caption_text = <Label> {
                     walk: {width: Fill, height: Fit},
                     draw_label: {
-                        text_style: <REGULAR_TEXT> {},
+                        text_style: <PRIMARY_TEXT> {},
                         color: #0
                     },
                     label: "caption text",
+                }
+            }
+
+            view_comments_btn = <Button> {
+                icon_walk: {width: Fit, height: Fit}
+                label: "View all 26 comments"
+                
+                draw_label: {
+                    text_style: <PRIMARY_TEXT> {},
+                    color: #F2F2F2
+                },
+
+                draw_bg: {
+                    instance hover: 0.0
+                    instance pressed: 0.0
+                    
+                    fn pixel(self) -> vec4 {
+                        let sdf = Sdf2d::viewport(self.pos * self.rect_size);
+                        return sdf.result
+                    }
                 }
             }
         }
@@ -173,7 +204,8 @@ live_design! {
                 align: {
                     x: 0.0,
                     y: 0.0
-                }
+                },
+                padding: 0.0
             },
             walk: {
                 width: Fill,
@@ -247,7 +279,7 @@ impl LiveHook for App {
             id: 908234823904,
             user: "matthewwastaken".to_string(),
             user_pfp_url: "some_pfp_url".to_string(),
-            content_url: "some_content_url".to_string(),
+            content_url: "/Users/devlian/code/rust/futurewei/mkpd/makepad_social_media_feed/resources/post.jpg".to_string(),
             caption: "This is a a test caption, it looks pretty neat with word-wrapping. Looking forward to links and emojis".to_string(),
         });
 
@@ -255,7 +287,7 @@ impl LiveHook for App {
             id: 908234823902,
             user: "i_am_susan".to_string(),
             user_pfp_url: "some_pfp_url".to_string(),
-            content_url: "some_content_url".to_string(),
+            content_url: "/Users/devlian/code/rust/futurewei/mkpd/makepad_social_media_feed/resources/post2.jpg".to_string(),
             caption: "lorem ipusm dolor set amet sit amet, lorem ipusm dolor set amet sit amet".to_string(),
         });
 
@@ -263,7 +295,7 @@ impl LiveHook for App {
             id: 908234823902,
             user: "makegram".to_string(),
             user_pfp_url: "some_pfp_url".to_string(),
-            content_url: "some_content_url".to_string(),
+            content_url: "/Users/devlian/code/rust/futurewei/mkpd/makepad_social_media_feed/resources/post3.jpg".to_string(),
             caption: "lorem ipusm dolor set amet sit amet, lorem ipusm dolor set amet sit amet".to_string(),
         });
 
@@ -287,19 +319,21 @@ impl AppMain for App {
         let post_list = self.ui.get_swipe_list_set(ids!(post_list));
 
         if let Event::Draw(event) = event {
-            // self.ui.draw_widget_all(&mut Cx2d::new(cx, event));
 
             let cx = &mut Cx2d::new(cx, event);
+            
             while let Some(next) = self.ui.draw_widget(cx).hook_widget() {
+            
                 if let Some(mut list) = post_list.has_widget(&next).borrow_mut() {
+            
                     for post in self.posts.iter() {
                         if let Some(item) = list.get_entry(cx, LiveId(post.id as u64).into(), live_id!(Entry)) {
                             item.get_label(id!(username)).set_label(&post.user);
                             item.get_label(id!(caption_text)).set_label(&post.caption);
                             
                             // TODO 
-                            // item.get_image(id!(profile_img)).set_url(&post.user_pfp_url); 
-                            // item.get_image(id!(content)).set_url(&post.content_url); 
+                            // item.get_frame(id!(content)).set_image(cx, &post.content_url);
+                            // item.get_frame(id!(profile_img)).set_image(cx, &post.user_pfp_url);
                             item.draw_widget_all(cx);
                         }
                     }
